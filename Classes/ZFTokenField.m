@@ -54,11 +54,19 @@
 @end
 
 @implementation ZFTokenField
-
+- (instancetype)initWithCoder:(NSCoder *)aDecoder {
+    self = [super initWithCoder:aDecoder];
+    if (self) {
+        self.editingMode = YES;
+        [self setup];
+    }
+    return self;
+}
 - (instancetype)initWithFrame:(CGRect)frame
 {
     self = [super initWithFrame:frame];
     if (self) {
+        self.editingMode = YES;
         [self setup];
     }
     return self;
@@ -82,12 +90,13 @@
 {
     self.clipsToBounds = YES;
     [self addTarget:self action:@selector(focusOnTextField) forControlEvents:UIControlEventTouchUpInside];
-    
-    self.textField = [[ZFTokenTextField alloc] init];
-    self.textField.borderStyle = UITextBorderStyleNone;
-    self.textField.backgroundColor = [UIColor clearColor];
-    self.textField.delegate = self;
-    [self.textField addTarget:self action:@selector(textFieldDidChange:) forControlEvents:UIControlEventEditingChanged];
+    if (self.isEditingModeEnabled) {
+        self.textField = [[ZFTokenTextField alloc] init];
+        self.textField.borderStyle = UITextBorderStyleNone;
+        self.textField.backgroundColor = [UIColor clearColor];
+        self.textField.delegate = self;
+        [self.textField addTarget:self action:@selector(textFieldDidChange:) forControlEvents:UIControlEventEditingChanged];
+    }
     
     [self reloadData];
 }
@@ -140,10 +149,11 @@
             [self.tokenViews addObject:tokenView];
         }
     }
-    
-    [self.tokenViews addObject:self.textField];
-    [self addSubview:self.textField];
-    self.textField.frame = (CGRect) {0,0,50,[self.dataSource lineHeightForTokenInField:self]};
+    if (self.isEditingModeEnabled) {
+        [self.tokenViews addObject:self.textField];
+        [self addSubview:self.textField];
+        self.textField.frame = (CGRect) {0,0,50,[self.dataSource lineHeightForTokenInField:self]};
+    }
     
     [self invalidateIntrinsicContentSize];
     [self.textField setText:@""];
@@ -151,7 +161,7 @@
 
 - (NSUInteger)numberOfToken
 {
-    return self.tokenViews.count - 1;
+    return self.tokenViews.count - (self.isEditingModeEnabled ? 1 : 0 );
 }
 
 - (NSUInteger)indexOfTokenView:(UIView *)view
@@ -181,11 +191,10 @@
             rowCount = 0;
         }
         
-        if ([token isKindOfClass:[ZFTokenTextField class]]) {
+        if ([token isKindOfClass:[ZFTokenTextField class]] && self.isEditingModeEnabled) {
             UITextField *textField = (UITextField *)token;
             CGSize size = [textField sizeThatFits:(CGSize){CGRectGetWidth(self.bounds), lineHeight}];
             size.height = lineHeight;
-            size.width += 16; // margin right
             if (size.width > CGRectGetWidth(self.bounds)) {
                 size.width = CGRectGetWidth(self.bounds);
             }

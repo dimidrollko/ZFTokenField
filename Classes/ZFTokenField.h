@@ -38,6 +38,7 @@
 @property (nonatomic, weak) IBOutlet id<ZFTokenFieldDelegate> delegate;
 
 @property (nonatomic, strong, readonly) ZFTokenTextField *textField;
+@property (nonatomic, assign, getter=isEditingModeEnabled, setter=editingModeEnabled:) BOOL editingMode;
 
 - (void)reloadData;
 - (NSUInteger)numberOfToken;
